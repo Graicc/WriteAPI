@@ -1,0 +1,36 @@
+name: CD
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: |
+          dotnet publish -c Release
+          copy LICENSE WriteAPI\bin\Release\netcoreapp3.1\publish\
+      - name: Upload Write API
+        uses: actions/upload-artifact@v2
+        with:
+          name: Write API
+          path: WriteAPI/bin/Release/netcoreapp3.1/publish/
+      - name: Upload Sample Project
+        uses: actions/upload-artifact@v2
+        with:
+          name: Sample Project
+          path: SampleProject/bin/Release/netcoreapp3.1/publish/

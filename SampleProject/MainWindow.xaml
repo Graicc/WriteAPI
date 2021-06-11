@@ -1,0 +1,14 @@
+﻿<Window x:Class="SampleProject.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SampleProject"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="175" Width="575">
+	<Grid Margin="0,0,0,0">
+		<Button x:Name="SetStart" Content="Set Start" HorizontalAlignment="Left" Height="75" Margin="10,10,0,0" VerticalAlignment="Top" Width="150" RenderTransformOrigin="0.5,0.5" FontSize="20" Click="SetStart_Click"/>
+		<Button x:Name="SetEnd" Content="Set End" HorizontalAlignment="Left" Height="75" Margin="165,10,0,0" VerticalAlignment="Top" Width="150" RenderTransformOrigin="0.5,0.5" FontSize="20" Click="SetEnd_Click"/>
+		<Button x:Name="FollowPath" Content="Follow Path" HorizontalAlignment="Left" Height="75" Margin="320,10,0,0" VerticalAlignment="Top" Width="150" RenderTransformOrigin="0.5,0.5" FontSize="20" Click="FollowPath_Click"/>
+	</Grid>
+</Window>
