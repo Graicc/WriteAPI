@@ -37,7 +37,9 @@ namespace WriteAPI
 				var response = httpClient.GetAsync(RemoteConfigPath).Result;
 				if (response.IsSuccessStatusCode)
 				{
-					using (Stream output = File.OpenWrite(ConfigPath))
+					FileInfo fileInfo = new FileInfo(ConfigPath);
+					FileMode fileMode = fileInfo.Exists ? FileMode.Truncate : FileMode.Create;
+					using (Stream output = File.Open(ConfigPath, fileMode))
 					{
 						response.Content.CopyToAsync(output).Wait();
 					}
