@@ -1,4 +1,4 @@
 {
-	"cameraPositionAddress": "echovr.exe+232C318,0x7688,0x0,0x60",
-	"cameraRotationAddress": "echovr.exe+232C318,0x7688,0x0,0x50"
+	"cameraPositionAddress": "echovr.exe+232D318,0x7688,0x0,0x60",
+	"cameraRotationAddress": "echovr.exe+232D318,0x7688,0x0,0x50"
 }
