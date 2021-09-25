@@ -35,17 +35,16 @@ jobs:
           files: SampleProject/bin/Release/netcoreapp3.1/publish/
           dest: SampleProject.zip
 
-      - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        with:
-          fallback: 1.0.0
+      - name: Get Previous Tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
 
-      - name: 'Get next minor version'
-        id: semvers
-        uses: "WyriHaximus/github-action-next-semvers@v1"
+      - name: Bump Semver
+        uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
         with:
-          version: ${{ steps.previoustag.outputs.tag }}
+          current_version: ${{ steps.get-latest-tag.outputs.tag }}
+          level: minor
 
       - name: Make Release
         uses: ncipollo/release-action@v1
@@ -53,6 +52,6 @@ jobs:
           commit: ${GITHUB_SHA}
           bodyfile: "body.md"
           artifacts: "WriteAPI.zip,SampleProject.zip"
-          tag: ${{ steps.semvers.outputs.patch }}
+          tag: ${{ steps.bump-semver.outputs.new_version }}
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
