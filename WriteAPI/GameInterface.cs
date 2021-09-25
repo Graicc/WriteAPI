@@ -86,18 +86,18 @@ namespace WriteAPI
 
 		static Vector3 ReadVector(string address)
 		{
-			float x = mem.ReadFloat(AddressWithOffset(address, 0));
-			float y = mem.ReadFloat(AddressWithOffset(address, 4));
-			float z = mem.ReadFloat(AddressWithOffset(address, 8));
+			float x = mem.ReadFloat(AddressWithOffset(address, 0), round: false);
+			float y = mem.ReadFloat(AddressWithOffset(address, 4), round: false);
+			float z = mem.ReadFloat(AddressWithOffset(address, 8), round: false);
 			return new Vector3(x, y, z);
 		}
 
 		static Quaternion ReadQuaternion(string address)
 		{
-			float x = mem.ReadFloat(AddressWithOffset(address, 0));
-			float y = mem.ReadFloat(AddressWithOffset(address, 4));
-			float z = mem.ReadFloat(AddressWithOffset(address, 8));
-			float w = mem.ReadFloat(AddressWithOffset(address, 12));
+			float x = mem.ReadFloat(AddressWithOffset(address, 0), round: false);
+			float y = mem.ReadFloat(AddressWithOffset(address, 4), round: false);
+			float z = mem.ReadFloat(AddressWithOffset(address, 8), round: false);
+			float w = mem.ReadFloat(AddressWithOffset(address, 12), round: false);
 			return new Quaternion(x, y, z, w);
 		}
 	}
