@@ -59,6 +59,7 @@ namespace WriteAPI
 			string data = JsonConvert.SerializeObject(transform, settings) + "\n";
 
 			HttpListenerResponse response = context.Response;
+			response.AddHeader("Content-Type", "application/json; charset=utf-8");
 
 			byte[] buffer = Encoding.UTF8.GetBytes(data);
 			response.ContentLength64 = buffer.Length;
