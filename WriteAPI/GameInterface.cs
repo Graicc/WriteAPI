@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Numerics;
 using Memory;
 
@@ -8,46 +6,68 @@ namespace WriteAPI
 {
 	public static class GameInterface
 	{
-		const string GameName = "echovr.exe";
+		private static string gameExe = "echovr.exe";
+		private static string gameName = "Echo VR";
 
 		public static CameraTransform CameraTransform
 		{
-			get
-			{
-				return GetTransform();
-			}
-			set
-			{
-				UpdateTransform(value);
-			}
+			get => GetTransform();
+			set => UpdateTransform(value);
 		}
 
-		static Mem mem = new Mem();
+		public static float LoneEchoSpeed => GetLoneEchoSpeed();
+		public static float LoneEcho2Speed => GetLoneEcho2Speed();
+
+		private static readonly Mem echoVRMem = new Mem();
+		private static readonly Mem loneEchoMem = new Mem();
+		private static readonly Mem loneEcho2Mem = new Mem();
 
 		public static void Hook()
 		{
-			Console.WriteLine("Hooking Echo VR...");
-
-			bool hooked;
-			do
+			gameName = Program.game switch
 			{
-				hooked = mem.OpenProcess(GameName);
-				if (!hooked)
-				{
-					Console.WriteLine("Could not find Echo VR process, make sure Echo VR is running");
-					Console.WriteLine("Trying again in 5 seconds...");
-					System.Threading.Thread.Sleep(5000);
-				}
-			} while (!hooked);
+				"echovr" => "Echo VR",
+				"loneecho" => "Lone Echo",
+				"loneecho2" => "Lone Echo 2",
+			};
+			gameExe = Program.game switch
+			{
+				"echovr" => "echovr.exe",
+				"loneecho" => "loneecho.exe",
+				"loneecho2" => "loneecho2.exe",
+			};
+			
+			Console.WriteLine($"Hooking {gameName}...");
 
-			Console.WriteLine("Hooked Echo VR");
+			bool hooked = false;
+			while (true)
+			{
+				if (!echoVRMem.OpenProcess(gameExe))
+				{
+					if (hooked)
+					{
+						Console.WriteLine($"Could not find {gameName} process, make sure {gameName} is running");
+					}
+
+					hooked = false;
+				}
+				else
+				{
+					if (!hooked)
+					{
+						Console.WriteLine($"Found {gameName} Process");
+					}
+					hooked = true;
+				}
+				System.Threading.Thread.Sleep(1000);
+			}
 		}
 
-		static void UpdateTransform(CameraTransform transform)
+		private static void UpdateTransform(CameraTransform transform)
 		{
 			transform.rotation = Quaternion.Normalize(transform.rotation);
-			WriteVector(ConfigurationManager.config.cameraPositionAddress, transform.position);
-			WriteQuaternion(ConfigurationManager.config.cameraRotationAddress, transform.rotation);
+			WriteVector(echoVRMem, ConfigurationManager.config.cameraPositionAddress, transform.position);
+			WriteQuaternion(echoVRMem, ConfigurationManager.config.cameraRotationAddress, transform.rotation);
 #if DEBUG
 			Console.WriteLine($"Wrote new camera transform: {transform}");
 #endif
@@ -55,28 +75,45 @@ namespace WriteAPI
 
 		static CameraTransform GetTransform()
 		{
-			Vector3 position = ReadVector(ConfigurationManager.config.cameraPositionAddress);
-			Quaternion rotation = ReadQuaternion(ConfigurationManager.config.cameraRotationAddress);
+			Vector3 position = ReadVector(echoVRMem, ConfigurationManager.config.cameraPositionAddress);
+			Quaternion rotation = ReadQuaternion(echoVRMem, ConfigurationManager.config.cameraRotationAddress);
 			return new CameraTransform(position, rotation);
 		}
 
-		static string AddressWithOffset(string address, int offset)
+		private static float GetLoneEchoSpeed()
 		{
-			string baseString = address.Substring(0, address.Length - 3);
-			string end = address.Substring(address.Length - 2);
+			if (loneEchoMem.OpenProcess("loneecho"))
+			{
+				return loneEchoMem.ReadFloat(ConfigurationManager.config.loneEchoSpeedAddress, round: false);
+			}
 
-			int preoffset = Convert.ToInt32($"0x{end}", 16);
-			return baseString + (preoffset + offset).ToString("X2");
+			return -1;
+		}
+		private static float GetLoneEcho2Speed()
+		{
+			if (loneEcho2Mem.OpenProcess("loneecho2"))
+			{
+				return loneEcho2Mem.ReadFloat(ConfigurationManager.config.loneEcho2SpeedAddress, round: false);
+			}
+
+			return -1;
 		}
 
-		static void WriteVector(string address, Vector3 vector)
+
+		private static string AddressWithOffset(string address, int offset)
+		{
+			int preOffset = Convert.ToInt32(address, 16);
+			return address[..^3] + (preOffset + offset).ToString("X2");
+		}
+		
+		private static void WriteVector(Mem mem, string address, Vector3 vector)
 		{
 			mem.WriteMemory(AddressWithOffset(address, 0), "float", vector.X.ToString());
 			mem.WriteMemory(AddressWithOffset(address, 4), "float", vector.Y.ToString());
 			mem.WriteMemory(AddressWithOffset(address, 8), "float", vector.Z.ToString());
 		}
 
-		static void WriteQuaternion(string address, Quaternion quaternion)
+		private static void WriteQuaternion(Mem mem, string address, Quaternion quaternion)
 		{
 			mem.WriteMemory(AddressWithOffset(address, 0), "float", quaternion.X.ToString());
 			mem.WriteMemory(AddressWithOffset(address, 4), "float", quaternion.Y.ToString());
@@ -84,7 +121,7 @@ namespace WriteAPI
 			mem.WriteMemory(AddressWithOffset(address, 12), "float", quaternion.W.ToString());
 		}
 
-		static Vector3 ReadVector(string address)
+		private static Vector3 ReadVector(Mem mem, string address)
 		{
 			float x = mem.ReadFloat(AddressWithOffset(address, 0), round: false);
 			float y = mem.ReadFloat(AddressWithOffset(address, 4), round: false);
@@ -92,7 +129,7 @@ namespace WriteAPI
 			return new Vector3(x, y, z);
 		}
 
-		static Quaternion ReadQuaternion(string address)
+		private static Quaternion ReadQuaternion(Mem mem, string address)
 		{
 			float x = mem.ReadFloat(AddressWithOffset(address, 0), round: false);
 			float y = mem.ReadFloat(AddressWithOffset(address, 4), round: false);

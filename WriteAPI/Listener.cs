@@ -11,7 +11,7 @@ namespace WriteAPI
 	public static class Listener
 	{
 		// Spark already uses port 6722 for discord OAuth, so we use the next available port
-		public static readonly string[] Prefixes = { "http://127.0.0.1:6723/", "http://localhost:6723/" };
+		private static readonly string[] Prefixes = {"http://127.0.0.1:6723/", "http://localhost:6723/"};
 
 		public static void Start()
 		{
@@ -19,7 +19,7 @@ namespace WriteAPI
 			listenerThread.Start();
 		}
 
-		static void ListenerThread()
+		private static void ListenerThread()
 		{
 			HttpListener listener = new HttpListener();
 
@@ -37,18 +37,30 @@ namespace WriteAPI
 				HttpListenerContext context = listener.GetContext();
 				HttpListenerRequest request = context.Request;
 
-				if (request.HttpMethod == "GET")
+				switch (request.RawUrl)
 				{
-					ProcessGet(context);
-				}
-				else if (request.HttpMethod == "POST")
-				{
-					ProcessPost(context);
+					case "/camera_transform":
+						switch (request.HttpMethod)
+						{
+							case "GET":
+								ProcessGet(context);
+								break;
+							case "POST":
+								ProcessPost(context);
+								break;
+						}
+						break;
+					case "/le1/speed":
+						ReturnSpeed(context, 1);
+						break;
+					case "/le2/speed":
+						ReturnSpeed(context, 2);
+						break;
 				}
 			}
 		}
 
-		static void ProcessGet(HttpListenerContext context)
+		private static void ProcessGet(HttpListenerContext context)
 		{
 			CameraTransform transform = GameInterface.CameraTransform;
 			JsonSerializerSettings settings = new JsonSerializerSettings()
@@ -68,7 +80,7 @@ namespace WriteAPI
 			response.OutputStream.Close();
 		}
 
-		static void ProcessPost(HttpListenerContext context)
+		private static void ProcessPost(HttpListenerContext context)
 		{
 			string data;
 			using (StreamReader reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
@@ -83,11 +95,11 @@ namespace WriteAPI
 			{
 				transform = JsonConvert.DeserializeObject<CameraTransform>(data);
 			}
-			catch (JsonException E)
+			catch (JsonException e)
 			{
 				Console.WriteLine("Invalid POST request");
 #if DEBUG
-				Console.WriteLine(E.Message);
+				Console.WriteLine(e.Message);
 #endif
 				response.StatusCode = 400;
 				response.OutputStream.Close();
@@ -105,7 +117,41 @@ namespace WriteAPI
 			GameInterface.CameraTransform = transform;
 
 			ProcessGet(context);
-			return;
+		}
+		
+		private static void ReturnSpeed(HttpListenerContext context, int loneEchoVersion)
+		{
+			switch (loneEchoVersion)
+			{
+				case 1:
+				{
+					string data = "{\"speed\": " + GameInterface.LoneEchoSpeed + "}";
+
+					HttpListenerResponse response = context.Response;
+					response.AddHeader("Content-Type", "application/json; charset=utf-8");
+
+					byte[] buffer = Encoding.UTF8.GetBytes(data);
+					response.ContentLength64 = buffer.Length;
+
+					response.OutputStream.Write(buffer, 0, buffer.Length);
+					response.OutputStream.Close();
+					break;
+				}
+				case 2:
+				{
+					string data = "{\"speed\": " + GameInterface.LoneEcho2Speed + "}";
+
+					HttpListenerResponse response = context.Response;
+					response.AddHeader("Content-Type", "application/json; charset=utf-8");
+
+					byte[] buffer = Encoding.UTF8.GetBytes(data);
+					response.ContentLength64 = buffer.Length;
+
+					response.OutputStream.Write(buffer, 0, buffer.Length);
+					response.OutputStream.Close();
+					break;
+				}
+			}
 		}
 	}
 }

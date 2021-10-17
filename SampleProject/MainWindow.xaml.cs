@@ -15,6 +15,7 @@ namespace SampleProject
 		const string Endpoint = "http://127.0.0.1:6723/";
 
 		static readonly HttpClient client = new HttpClient();
+		private static float duration = 3;
 
 		public class CameraTransform
 		{
@@ -77,6 +78,7 @@ namespace SampleProject
 		{
 			if (!followPathThread.IsAlive)
 			{
+				float.TryParse(TimeInput.Text, out duration);
 				followPathThread = new Thread(FollowPathThread);
 				followPathThread.Start();
 			}
@@ -84,8 +86,6 @@ namespace SampleProject
 
 		static void FollowPathThread()
 		{
-			float duration = 3;
-
 			DateTime startTime = DateTime.Now;
 			DateTime currentTime = startTime;
 			float t = 0;
