@@ -3,6 +3,12 @@ name: CD
 on:
   push:
     branches: [master]
+    paths-ignore:
+      # ignore all .yml files
+      - '**.yml'
+      # dont ignore this specific file
+      - '!.github/workflows/main.yml'
+
   pull_request:
     branches: [master]
 
