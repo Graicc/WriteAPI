@@ -1,0 +1,59 @@
+name: Releases
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: |
+          dotnet publish -c Release
+          copy LICENSE WriteAPI\bin\Release\netcoreapp3.1\publish\
+
+      - name: Zip Write API
+        uses: papeloto/action-zip@v1
+        with:
+          files: WriteAPI/bin/Release/netcoreapp3.1/publish/
+          dest: WriteAPI.zip
+
+      - name: Zip Sample Project
+        uses: papeloto/action-zip@v1
+        with:
+          files: SampleProject/bin/Release/netcoreapp3.1/publish/
+          dest: SampleProject.zip
+
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: 1.0.0
+
+      - name: Bump Semver
+        uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
+        with:
+          current_version: ${{ steps.previoustag.outputs.tag }}
+          level: minor
+
+      - name: Make Release
+        uses: ncipollo/release-action@v1
+        with:
+          commit: ${GITHUB_SHA}
+          bodyfile: "body.md"
+          artifacts: "WriteAPI.zip,SampleProject.zip"
+          tag: ${{ steps.bump-semver.outputs.new_version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true

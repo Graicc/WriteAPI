@@ -36,7 +36,7 @@ namespace WriteAPI
 			Console.WriteLine();
 
 			// Constantly checks to see if still hooked
-			// new Thread(GameInterface.Hook).Start();
+			new Thread(GameInterface.Hook).Start();
 
 			Listener.Start();
 		}
