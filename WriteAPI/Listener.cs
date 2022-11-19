@@ -53,7 +53,7 @@ namespace WriteAPI
 					Console.WriteLine($"{debugIndex++}\t{sw.ElapsedTicks}");
 					sw.Restart();
 #endif
-					if (parts.Count == 0)
+					if (parts.Count == 0 || parts[0].StartsWith("#"))
 					{
 						HttpListenerResponse response = context.Response;
 						context.Response.AddHeader("Access-Control-Allow-Origin", "*");
