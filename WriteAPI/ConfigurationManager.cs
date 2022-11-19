@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 using System.IO;
 using System.Net.Http;
@@ -14,10 +12,25 @@ namespace WriteAPI
 
 		public struct Config
 		{
-			public string cameraPositionAddress;
-			public string cameraRotationAddress;
-			public string loneEchoSpeedAddress;
-			public string loneEcho2SpeedAddress;
+			public class EchoVRContainer
+			{
+				public string cameraPosition;
+				public string cameraRotation;
+			}
+
+			public class LoneEchoContainer
+			{
+				public string speed;
+			}
+
+			public class LoneEcho2Container
+			{
+				public string speed;
+			}
+
+			public EchoVRContainer EchoVR;
+			public LoneEchoContainer LoneEcho;
+			public LoneEcho2Container LoneEcho2;
 		}
 
 		public static Config config;
@@ -45,14 +58,16 @@ namespace WriteAPI
 				{
 					response.Content.CopyToAsync(output).Wait();
 				}
+
 				Console.WriteLine("Updated config file");
-			} else
+			}
+			else
 			{
 				Console.WriteLine("Could not get remote config file");
 			}
 		}
 
-		static Config ReadLocalConfig()
+		private static Config ReadLocalConfig()
 		{
 #if DEBUG
 			Console.WriteLine("Reading config");
@@ -67,7 +82,7 @@ namespace WriteAPI
 			Config localConfig = JsonConvert.DeserializeObject<Config>(data);
 
 #if DEBUG
-			Console.WriteLine($"Position address: {localConfig.cameraPositionAddress} | Rotation address: {localConfig.cameraRotationAddress}");
+			Console.WriteLine($"Position address: {localConfig.EchoVR.cameraPosition} | Rotation address: {localConfig.EchoVR.cameraRotation}");
 #endif
 
 			return localConfig;

@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Net;
 using Newtonsoft.Json;
 using System.Threading;
 using System.IO;
+using System.Linq;
 
 namespace WriteAPI
 {
 	public static class Listener
 	{
 		// Spark already uses port 6722 for discord OAuth, so we use the next available port
-		private static readonly string[] Prefixes = {"http://127.0.0.1:6723/", "http://localhost:6723/"};
+		private static readonly string[] Prefixes = { "http://127.0.0.1:6723/", "http://localhost:6723/" };
 
 		public static void Start()
 		{
@@ -37,121 +39,38 @@ namespace WriteAPI
 				HttpListenerContext context = listener.GetContext();
 				HttpListenerRequest request = context.Request;
 
-				switch (request.RawUrl)
-				{
-					case "/camera_transform":
-						switch (request.HttpMethod)
-						{
-							case "GET":
-								ProcessGet(context);
-								break;
-							case "POST":
-								ProcessPost(context);
-								break;
-						}
-						break;
-					case "/le1/speed":
-						ReturnSpeed(context, 1);
-						break;
-					case "/le2/speed":
-						ReturnSpeed(context, 2);
-						break;
-				}
-			}
-		}
-
-		private static void ProcessGet(HttpListenerContext context)
-		{
-			CameraTransform transform = GameInterface.CameraTransform;
-			JsonSerializerSettings settings = new JsonSerializerSettings()
-			{
-				ContractResolver = QuaternionContractResolver.Instance
-			};
-
-			string data = JsonConvert.SerializeObject(transform, settings) + "\n";
-
-			HttpListenerResponse response = context.Response;
-			response.AddHeader("Content-Type", "application/json; charset=utf-8");
-			response.AddHeader("Access-Control-Allow-Origin", "*");
-
-			byte[] buffer = Encoding.UTF8.GetBytes(data);
-			response.ContentLength64 = buffer.Length;
-
-			response.OutputStream.Write(buffer, 0, buffer.Length);
-			response.OutputStream.Close();
-		}
-
-		private static void ProcessPost(HttpListenerContext context)
-		{
-			string data;
-			using (StreamReader reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
-			{
-				data = reader.ReadToEnd();
-			}
-
-			CameraTransform transform;
-			HttpListenerResponse response = context.Response;
-
-			try
-			{
-				transform = JsonConvert.DeserializeObject<CameraTransform>(data);
-			}
-			catch (JsonException e)
-			{
-				Console.WriteLine("Invalid POST request");
 #if DEBUG
-				Console.WriteLine(e.Message);
+				Stopwatch sw = Stopwatch.StartNew();
+				int debugIndex = 20;
 #endif
-				response.StatusCode = 400;
-				response.OutputStream.Close();
-				return;
-			}
 
-			if (transform == null)
-			{
-				Console.WriteLine("Invalid POST request");
-				response.StatusCode = 400;
-				response.OutputStream.Close();
-				return;
-			}
-
-			GameInterface.CameraTransform = transform;
-
-			ProcessGet(context);
-		}
-		
-		private static void ReturnSpeed(HttpListenerContext context, int loneEchoVersion)
-		{
-			switch (loneEchoVersion)
-			{
-				case 1:
+				if (request.RawUrl != null)
 				{
-					string data = "{\"speed\": " + GameInterface.LoneEchoSpeed + "}";
+					List<string> parts = request.RawUrl.Split('/').ToList();
+					parts.RemoveAll(string.IsNullOrWhiteSpace);
 
-					HttpListenerResponse response = context.Response;
-					response.AddHeader("Content-Type", "application/json; charset=utf-8");
+#if DEBUG
+					Console.WriteLine($"{debugIndex++}\t{sw.ElapsedTicks}");
+					sw.Restart();
+#endif
 
-					byte[] buffer = Encoding.UTF8.GetBytes(data);
-					response.ContentLength64 = buffer.Length;
-
-					response.OutputStream.Write(buffer, 0, buffer.Length);
-					response.OutputStream.Close();
-					break;
+					switch (parts[0])
+					{
+						case "echovr":
+							Hooker.Games[GameInterface.Game.EchoVR].HandleRequest(context, parts);
+							break;
+						case "le1":
+							Hooker.Games[GameInterface.Game.LoneEcho].HandleRequest(context, parts);
+							break;
+						case "le2":
+							Hooker.Games[GameInterface.Game.LoneEcho2].HandleRequest(context, parts);
+							break;
+					}
 				}
-				case 2:
-				{
-					string data = "{\"speed\": " + GameInterface.LoneEcho2Speed + "}";
-
-					HttpListenerResponse response = context.Response;
-					response.AddHeader("Content-Type", "application/json; charset=utf-8");
-
-					byte[] buffer = Encoding.UTF8.GetBytes(data);
-					response.ContentLength64 = buffer.Length;
-
-					response.OutputStream.Write(buffer, 0, buffer.Length);
-					response.OutputStream.Close();
-					break;
-				}
+#if DEBUG
+				Console.WriteLine($"{debugIndex++}\t{sw.ElapsedTicks}");
+				sw.Restart();
+#endif
 			}
 		}
 	}
