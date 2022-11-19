@@ -53,18 +53,35 @@ namespace WriteAPI
 					Console.WriteLine($"{debugIndex++}\t{sw.ElapsedTicks}");
 					sw.Restart();
 #endif
-
-					switch (parts[0])
+					if (parts.Count == 0)
 					{
-						case "echovr":
-							Hooker.Games[GameInterface.Game.EchoVR].HandleRequest(context, parts);
-							break;
-						case "le1":
-							Hooker.Games[GameInterface.Game.LoneEcho].HandleRequest(context, parts);
-							break;
-						case "le2":
-							Hooker.Games[GameInterface.Game.LoneEcho2].HandleRequest(context, parts);
-							break;
+						HttpListenerResponse response = context.Response;
+						context.Response.AddHeader("Access-Control-Allow-Origin", "*");
+
+						byte[] buffer = Encoding.UTF8.GetBytes(Docs.docs);
+						response.ContentLength64 = buffer.Length;
+
+						response.OutputStream.Write(buffer, 0, buffer.Length);
+						response.OutputStream.Close();
+					}
+					else
+					{
+						context.Response.AddHeader("Access-Control-Allow-Origin", "*");
+						switch (parts[0])
+						{
+							case "openapi.yaml":
+								WriteString(context, Docs.yaml);
+								break;
+							case "echovr":
+								Hooker.Games[GameInterface.Game.EchoVR].HandleRequest(context, parts);
+								break;
+							case "le1":
+								Hooker.Games[GameInterface.Game.LoneEcho].HandleRequest(context, parts);
+								break;
+							case "le2":
+								Hooker.Games[GameInterface.Game.LoneEcho2].HandleRequest(context, parts);
+								break;
+						}
 					}
 				}
 #if DEBUG
@@ -72,6 +89,16 @@ namespace WriteAPI
 				sw.Restart();
 #endif
 			}
+		}
+
+		public static void WriteString(HttpListenerContext context, string str)
+		{
+			HttpListenerResponse response = context.Response;
+			byte[] buffer = Encoding.UTF8.GetBytes(Docs.yaml);
+			response.ContentLength64 = buffer.Length;
+
+			response.OutputStream.Write(buffer, 0, buffer.Length);
+			response.OutputStream.Close();
 		}
 	}
 }

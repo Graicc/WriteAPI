@@ -19,24 +19,24 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '3.1.x'
+          dotnet-version: '6.0.x'
       - name: Install dependencies
         run: dotnet restore
       - name: Build
         run: |
           dotnet publish -c Release
-          copy LICENSE WriteAPI\bin\Release\netcoreapp3.1\publish\
+          copy LICENSE WriteAPI\bin\Release\net6.0\publish\
       - name: Upload Write API
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Write API
-          path: WriteAPI/bin/Release/netcoreapp3.1/publish/
+          path: WriteAPI/bin/Release/net6.0/publish/
       - name: Upload Sample Project
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Sample Project
-          path: SampleProject/bin/Release/netcoreapp3.1/publish/
+          path: SampleProject/bin/Release/net6.0/publish/
