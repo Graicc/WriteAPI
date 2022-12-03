@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Threading;
 
 namespace WriteAPI
 {
 	public static class Program
 	{
-		static void Main(string[] args)
+		private static void Main(string[] args)
 		{
 			// --noupdateconfig prevents config from being updated
 			bool updateConfig = true;
@@ -20,9 +19,7 @@ namespace WriteAPI
 			ConfigurationManager.UpdateConfig(updateConfig);
 			Console.WriteLine();
 
-			GameInterface.Hook();
-			Console.WriteLine();
-
+			Hooker.Start();
 			Listener.Start();
 		}
 	}

@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Net;
 using Newtonsoft.Json;
 using System.Threading;
 using System.IO;
+using System.Linq;
 
 namespace WriteAPI
 {
 	public static class Listener
 	{
 		// Spark already uses port 6722 for discord OAuth, so we use the next available port
-		public static readonly string[] Prefixes = { "http://127.0.0.1:6723/", "http://localhost:6723/" };
+		private static readonly string[] Prefixes = { "http://127.0.0.1:6723/", "http://localhost:6723/" };
 
 		public static void Start()
 		{
@@ -19,7 +21,7 @@ namespace WriteAPI
 			listenerThread.Start();
 		}
 
-		static void ListenerThread()
+		private static void ListenerThread()
 		{
 			HttpListener listener = new HttpListener();
 
@@ -37,75 +39,66 @@ namespace WriteAPI
 				HttpListenerContext context = listener.GetContext();
 				HttpListenerRequest request = context.Request;
 
-				if (request.HttpMethod == "GET")
+#if DEBUG
+				Stopwatch sw = Stopwatch.StartNew();
+				int debugIndex = 20;
+#endif
+
+				if (request.RawUrl != null)
 				{
-					ProcessGet(context);
+					List<string> parts = request.RawUrl.Split('/').ToList();
+					parts.RemoveAll(string.IsNullOrWhiteSpace);
+
+#if DEBUG
+					Console.WriteLine($"{debugIndex++}\t{sw.ElapsedTicks}");
+					sw.Restart();
+#endif
+					if (parts.Count == 0 || parts[0].StartsWith("#"))
+					{
+						HttpListenerResponse response = context.Response;
+						context.Response.AddHeader("Access-Control-Allow-Origin", "*");
+
+						byte[] buffer = Encoding.UTF8.GetBytes(Docs.docs);
+						response.ContentLength64 = buffer.Length;
+
+						response.OutputStream.Write(buffer, 0, buffer.Length);
+						response.OutputStream.Close();
+					}
+					else
+					{
+						context.Response.AddHeader("Access-Control-Allow-Origin", "*");
+						switch (parts[0])
+						{
+							case "openapi.yaml":
+								WriteString(context, Docs.yaml);
+								break;
+							case "echovr":
+								Hooker.Games[GameInterface.Game.EchoVR].HandleRequest(context, parts);
+								break;
+							case "le1":
+								Hooker.Games[GameInterface.Game.LoneEcho].HandleRequest(context, parts);
+								break;
+							case "le2":
+								Hooker.Games[GameInterface.Game.LoneEcho2].HandleRequest(context, parts);
+								break;
+						}
+					}
 				}
-				else if (request.HttpMethod == "POST")
-				{
-					ProcessPost(context);
-				}
+#if DEBUG
+				Console.WriteLine($"{debugIndex++}\t{sw.ElapsedTicks}");
+				sw.Restart();
+#endif
 			}
 		}
 
-		static void ProcessGet(HttpListenerContext context)
+		public static void WriteString(HttpListenerContext context, string str)
 		{
-			CameraTransform transform = GameInterface.CameraTransform;
-			JsonSerializerSettings settings = new JsonSerializerSettings()
-			{
-				ContractResolver = QuaternionContractResolver.Instance
-			};
-
-			string data = JsonConvert.SerializeObject(transform, settings) + "\n";
-
 			HttpListenerResponse response = context.Response;
-			response.AddHeader("Content-Type", "application/json; charset=utf-8");
-
-			byte[] buffer = Encoding.UTF8.GetBytes(data);
+			byte[] buffer = Encoding.UTF8.GetBytes(Docs.yaml);
 			response.ContentLength64 = buffer.Length;
 
 			response.OutputStream.Write(buffer, 0, buffer.Length);
 			response.OutputStream.Close();
-		}
-
-		static void ProcessPost(HttpListenerContext context)
-		{
-			string data;
-			using (StreamReader reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
-			{
-				data = reader.ReadToEnd();
-			}
-
-			CameraTransform transform;
-			HttpListenerResponse response = context.Response;
-
-			try
-			{
-				transform = JsonConvert.DeserializeObject<CameraTransform>(data);
-			}
-			catch (JsonException E)
-			{
-				Console.WriteLine("Invalid POST request");
-#if DEBUG
-				Console.WriteLine(E.Message);
-#endif
-				response.StatusCode = 400;
-				response.OutputStream.Close();
-				return;
-			}
-
-			if (transform == null)
-			{
-				Console.WriteLine("Invalid POST request");
-				response.StatusCode = 400;
-				response.OutputStream.Close();
-				return;
-			}
-
-			GameInterface.CameraTransform = transform;
-
-			ProcessGet(context);
-			return;
 		}
 	}
 }

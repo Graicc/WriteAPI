@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WriteAPI": {
+      "commandName": "Project",
+      "commandLineArgs": "--noupdateconfig"
+    }
+  }
+}

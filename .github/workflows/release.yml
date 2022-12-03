@@ -8,12 +8,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '3.1.x'
+          dotnet-version: '6.0.x'
 
       - name: Install dependencies
         run: dotnet restore
@@ -21,12 +21,12 @@ jobs:
       - name: Build
         run: |
           dotnet publish -c Release
-          copy LICENSE WriteAPI\bin\Release\netcoreapp3.1\publish\
+          copy LICENSE WriteAPI\bin\Release\net6.0\publish\
 
       - name: Zip Write API
         uses: papeloto/action-zip@v1
         with:
-          files: WriteAPI/bin/Release/netcoreapp3.1/publish/
+          files: WriteAPI/bin/Release/net6.0/publish/
           dest: WriteAPI.zip
 
       - name: Zip Sample Project

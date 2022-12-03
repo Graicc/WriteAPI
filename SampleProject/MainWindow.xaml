@@ -5,10 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SampleProject"
         mc:Ignorable="d"
-        Title="MainWindow" Height="175" Width="575">
-	<Grid Margin="0,0,0,0">
-		<Button x:Name="SetStart" Content="Set Start" HorizontalAlignment="Left" Height="75" Margin="10,10,0,0" VerticalAlignment="Top" Width="150" RenderTransformOrigin="0.5,0.5" FontSize="20" Click="SetStart_Click"/>
-		<Button x:Name="SetEnd" Content="Set End" HorizontalAlignment="Left" Height="75" Margin="165,10,0,0" VerticalAlignment="Top" Width="150" RenderTransformOrigin="0.5,0.5" FontSize="20" Click="SetEnd_Click"/>
-		<Button x:Name="FollowPath" Content="Follow Path" HorizontalAlignment="Left" Height="75" Margin="320,10,0,0" VerticalAlignment="Top" Width="150" RenderTransformOrigin="0.5,0.5" FontSize="20" Click="FollowPath_Click"/>
-	</Grid>
+        Title="MainWindow" Height="175" Width="650">
+    <StackPanel Orientation="Horizontal">
+        <Button x:Name="SetStart" Content="Set Start" Height="75" Width="150" FontSize="20" Click="SetStart_Click" />
+        <Button x:Name="SetEnd" Content="Set End" Height="75" Width="150" FontSize="20" Click="SetEnd_Click" />
+        <Button x:Name="FollowPath" Content="Follow Path" Height="75" Width="150" FontSize="20" Click="FollowPath_Click" />
+        <Label Content="Time:" Height="25" FontSize="20"/>
+        <TextBox x:Name="TimeInput" Height="25" Width="100" FontSize="20" />
+    </StackPanel>
 </Window>

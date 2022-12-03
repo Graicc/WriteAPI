@@ -36,6 +36,10 @@ In order to update the camera transform, send a POST request to `127.0.0.1:6723`
 
 In order to get the camera transform, send a GET request to `127.0.0.1:6723`. The response will be json in the same format as the above.
 
+## Development
+
+Run with `--noupdateconfig` to use a modified local config without fetching one from the internet.
+
 ## Sample Project
 
 The repository includes a sample project that makes use of the API to move the camera. It is a .NET Core WPF project that interpolates the camera over a user defined path.
