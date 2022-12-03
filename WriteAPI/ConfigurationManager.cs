@@ -7,7 +7,7 @@ namespace WriteAPI
 {
 	public static class ConfigurationManager
 	{
-		private const string RemoteConfigPath = @"https://raw.githubusercontent.com/NtsFranz/WriteAPI/master/WriteAPI/config.json";
+		private const string RemoteConfigPath = @"https://raw.githubusercontent.com/Graicc/WriteAPI/master/WriteAPI/config.json";
 		private const string ConfigPath = "config.json";
 
 		public struct Config
